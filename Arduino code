@@ -1,0 +1,60 @@
+// Include necessary libraries
+#include <ESP8266WiFi.h>  // For ESP8266
+#include <BlynkSimpleEsp8266.h> // For Blynk
+
+// Blynk authentication token
+char auth[] = "Your_Blynk_Auth_Token"; // Replace with your Blynk token
+
+// Wi-Fi credentials
+char ssid[] = "Your_WiFi_SSID";
+char pass[] = "Your_WiFi_Password";
+
+// Define pin connections
+#define SOIL_MOISTURE_PIN A0 // Soil moisture sensor pin
+#define RELAY_PIN D1         // Relay pin for water pump
+
+int moistureLevel = 0;
+int threshold = 600; // Threshold value to turn on the pump (depends on soil moisture sensor)
+
+// Setup function
+void setup() {
+  // Initialize serial communication
+  Serial.begin(115200);
+
+  // Initialize Wi-Fi and Blynk
+  Blynk.begin(auth, ssid, pass);
+
+  // Set the relay pin as output
+  pinMode(RELAY_PIN, OUTPUT);
+  
+  // Initially turn off the water pump
+  digitalWrite(RELAY_PIN, HIGH); 
+}
+
+// Loop function
+void loop() {
+  // Run Blynk in the background
+  Blynk.run();
+
+  // Read soil moisture sensor value
+  moistureLevel = analogRead(SOIL_MOISTURE_PIN);
+  Serial.print("Soil Moisture Level: ");
+  Serial.println(moistureLevel);
+
+  // Control water pump based on soil moisture level
+  if (moistureLevel > threshold) {
+    // Soil is dry, turn on the water pump
+    digitalWrite(RELAY_PIN, LOW); // Relay ON
+    Serial.println("Water Pump ON");
+  } else {
+    // Soil is wet, turn off the water pump
+    digitalWrite(RELAY_PIN, HIGH); // Relay OFF
+    Serial.println("Water Pump OFF");
+  }
+
+  // Send moisture data to Blynk app
+  Blynk.virtualWrite(V1, moistureLevel);
+
+  // Delay before next reading
+  delay(2000);
+}
